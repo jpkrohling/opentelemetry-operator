@@ -24,10 +24,23 @@ import (
 // log is for logging in this package.
 var opentelemetrycollectorlog = logf.Log.WithName("opentelemetrycollector-resource")
 
+const (
+	WebhookPort     = 4343
+	WebhookCertDir  = "/apiserver.local.config/certificates"
+	WebhookCertName = "apiserver.crt"
+	WebhookKeyName  = "apiserver.key"
+)
+
 func (r *OpenTelemetryCollector) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(r).
-		Complete()
+	bldr := ctrl.NewWebhookManagedBy(mgr).For(r)
+
+	srv := mgr.GetWebhookServer()
+	srv.CertDir = WebhookCertDir
+	srv.CertName = WebhookCertName
+	srv.KeyName = WebhookKeyName
+	srv.Port = WebhookPort
+
+	return bldr.Complete()
 }
 
 // +kubebuilder:webhook:path=/mutate-opentelemetry-io-v1alpha1-opentelemetrycollector,mutating=true,failurePolicy=fail,groups=opentelemetry.io,resources=opentelemetrycollectors,verbs=create;update,versions=v1alpha1,name=mopentelemetrycollector.kb.io
